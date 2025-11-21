@@ -4,6 +4,10 @@
 #include <esp_log.h>
 #include <sstream>
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
 #define DETECTION_RUNNING_EVENT 1
 
 #define TAG "AfeWakeWord"
@@ -119,7 +123,9 @@ void AfeWakeWord::AudioDetectionTask() {
     auto feed_size = afe_iface_->get_feed_chunksize(afe_data_);
     ESP_LOGI(TAG, "Audio detection task started, feed size: %d fetch size: %d",
         feed_size, fetch_size);
-
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+    auto& offline_word_detect = OfflineWordDetect::GetInstance();
+#endif
     while (true) {
         xEventGroupWaitBits(event_group_, DETECTION_RUNNING_EVENT, pdFALSE, pdTRUE, portMAX_DELAY);
 
@@ -127,7 +133,13 @@ void AfeWakeWord::AudioDetectionTask() {
         if (res == nullptr || res->ret_value == ESP_FAIL) {
             continue;;
         }
-
+#if CONFIG_USE_OFFLINE_WORD_DETECT    
+        if(offline_word_detect.Detect(res->data)){
+            ESP_LOGI(TAG, "Offline word detected");
+            afe_iface_->reset_buffer(afe_data_);
+            continue;
+        }
+#endif
         // Store the wake word data for voice recognition, like who is speaking
         StoreWakeWordData(res->data, res->data_size / sizeof(int16_t));
 

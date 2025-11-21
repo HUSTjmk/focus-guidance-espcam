@@ -13,6 +13,11 @@
 #include "audio_processor.h"
 #include "audio_codec.h"
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
+
 class AfeAudioProcessor : public AudioProcessor {
 public:
     AfeAudioProcessor();
@@ -40,6 +45,11 @@ private:
     std::vector<int16_t> output_buffer_;
 
     void AudioProcessorTask();
+
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+    OfflineWordDetect offline_word_detect_;
+#endif
+
 };
 
 #endif 

@@ -222,6 +222,8 @@ elseif(CONFIG_BOARD_TYPE_LABPLUS_LEDONG_V2)
     set(BOARD_TYPE "labplus-ledong-v2") 
 elseif(CONFIG_BOARD_TYPE_SURFER_C3_1_14TFT)
     set(BOARD_TYPE "surfer-c3-1.14tft")
+elseif(CONFIG_BOARD_TYPE_FOCUS_GUIDANCE_S3CAM)
+    set(BOARD_TYPE "focus-guidance-s3cam")
 endif()
 file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
@@ -241,7 +243,9 @@ elseif(CONFIG_USE_ESP_WAKE_WORD)
 elseif(CONFIG_USE_CUSTOM_WAKE_WORD)
     list(APPEND SOURCES "audio/wake_words/custom_wake_word.cc")
 endif()
-
+if(CONFIG_USE_OFFLINE_WORD_DETECT)
+    list(APPEND SOURCES "audio/offline_words/offline_word_detect.cc")
+endif()
 # 根据Kconfig选择语言目录
 if(CONFIG_LANGUAGE_ZH_CN)
     set(LANG_DIR "zh-CN")
