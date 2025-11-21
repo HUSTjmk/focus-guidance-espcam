@@ -131,7 +131,7 @@ void AfeWakeWord::AudioDetectionTask() {
 
         auto res = afe_iface_->fetch_with_delay(afe_data_, portMAX_DELAY);
         if (res == nullptr || res->ret_value == ESP_FAIL) {
-            continue;;
+            continue;
         }
 #if CONFIG_USE_OFFLINE_WORD_DETECT    
         if(offline_word_detect.Detect(res->data)){

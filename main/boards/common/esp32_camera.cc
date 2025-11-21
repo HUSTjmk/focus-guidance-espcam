@@ -80,8 +80,12 @@ Esp32Camera::~Esp32Camera() {
 }
 
 void Esp32Camera::SetExplainUrl(const std::string& url, const std::string& token) {
-    explain_url_ = url;
-    explain_token_ = token;
+    // explain_url_ = url;
+    // explain_token_ = token;
+    explain_url_ = "http://192.168.37.201:8000/upload/";
+    explain_token_ = "test-token";
+    ESP_LOGI(TAG, "Set explain URL: %s", explain_url_.c_str());
+    ESP_LOGI(TAG, "Set explain token: %s", explain_token_.c_str());
 }
 
 bool Esp32Camera::Capture() {

@@ -18,6 +18,8 @@
 #include <esp_lcd_panel_ops.h>
 #include <driver/spi_common.h>
 
+#include <thread>
+
 #if CONFIG_USE_OFFLINE_WORD_DETECT
 #include "offline_words/offline_word_detect.h"  
 #endif
@@ -187,9 +189,16 @@ private:
     void InitializeOfflineWordDetect() {
 #if CONFIG_USE_OFFLINE_WORD_DETECT  
         auto& offline_word_detect = OfflineWordDetect::GetInstance();
-        offline_word_detect.AddCommand("pai zhao", [this](){        
-        camera_->Capture();
-        ESP_LOGI(TAG, "Command: pai zhao");
+        offline_word_detect.AddCommand("pai zhao", [this](){               
+        std::thread ([this](){
+            ESP_LOGI(TAG, "Command: pai zhao");
+            TickType_t startTick = xTaskGetTickCount();
+            camera_->Capture();
+            std::string result = camera_->Explain("Take a photo");
+            ESP_LOGI(TAG, "Explain result: %s", result.c_str());            
+            TickType_t endTick = xTaskGetTickCount();
+            ESP_LOGI(TAG, "Photo taken and explained in %d ms", (endTick - startTick) * portTICK_PERIOD_MS);
+        }).detach();
     }); // 拍照   
 #endif
     }
