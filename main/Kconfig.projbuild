@@ -352,6 +352,9 @@ choice BOARD_TYPE
     config BOARD_TYPE_SURFER_C3_1_14TFT
         bool "Surfer-C3-1-14TFT"
         depends on IDF_TARGET_ESP32C3
+    config BOARD_TYPE_FOCUS_GUIDANCE_P4CAM
+        bool "Focus Guidance P4Cam"
+        depends on IDF_TARGET_ESP32P4
 endchoice
 
 choice ESP_S3_LCD_EV_Board_Version_TYPE

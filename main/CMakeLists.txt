@@ -224,6 +224,8 @@ elseif(CONFIG_BOARD_TYPE_SURFER_C3_1_14TFT)
     set(BOARD_TYPE "surfer-c3-1.14tft")
 elseif(CONFIG_BOARD_TYPE_FOCUS_GUIDANCE_S3CAM)
     set(BOARD_TYPE "focus-guidance-s3cam")
+elseif(CONFIG_BOARD_TYPE_FOCUS_GUIDANCE_P4CAM)
+    set(BOARD_TYPE "focus-guidance-p4cam")
 endif()
 file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
