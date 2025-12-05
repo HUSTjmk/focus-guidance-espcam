@@ -19,6 +19,10 @@
 #include "audio_codec.h"
 #include "wake_word.h"
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
 class AfeWakeWord : public WakeWord {
 public:
     AfeWakeWord();
@@ -55,6 +59,11 @@ private:
 
     void StoreWakeWordData(const int16_t* data, size_t size);
     void AudioDetectionTask();
+
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+    OfflineWordDetect offline_word_detect_;
+#endif
+
 };
 
 #endif

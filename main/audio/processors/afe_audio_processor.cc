@@ -1,6 +1,10 @@
 #include "afe_audio_processor.h"
 #include <esp_log.h>
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
 #define PROCESSOR_RUNNING 0x01
 
 #define TAG "AfeAudioProcessor"
@@ -123,6 +127,11 @@ void AfeAudioProcessor::AudioProcessorTask() {
     auto feed_size = afe_iface_->get_feed_chunksize(afe_data_);
     ESP_LOGI(TAG, "Audio communication task started, feed size: %d fetch size: %d",
         feed_size, fetch_size);
+#if CONFIG_USE_OFFLINE_WORD_DETECT   
+    vTaskDelay(200 / portTICK_PERIOD_MS);//玄学的延时 
+    auto& offline_word_detect = OfflineWordDetect::GetInstance();
+    auto& app = Application::GetInstance();
+#endif
 
     while (true) {
         xEventGroupWaitBits(event_group_, PROCESSOR_RUNNING, pdFALSE, pdTRUE, portMAX_DELAY);
@@ -137,7 +146,31 @@ void AfeAudioProcessor::AudioProcessorTask() {
             }
             continue;
         }
+#if CONFIG_USE_OFFLINE_WORD_DETECT    
+        if(offline_word_detect.Detect(res->data)){
+            ESP_LOGI(TAG, "Offline word detected");
+            afe_iface_->reset_buffer(afe_data_);
+            // protocol_->SendAbortSpeaking(AbortReason::kAbortReasonWakeWordDetected);
+            // protocol_->SendStopListening();
+            //app.StartListening();
+            // // 停止I2S通道传输
+            // ESP_ERROR_CHECK(i2s_channel_disable(tx_handle_));
 
+            // // 清空I2S缓冲区
+            // ESP_ERROR_CHECK(i2s_channel_clear(tx_handle_));
+            std::thread ([&app]() {
+                uint32_t start_tick = xTaskGetTickCount();
+                while(app.GetDeviceState() != kDeviceStateSpeaking){
+                    vTaskDelay(20 / portTICK_PERIOD_MS);
+                    if((xTaskGetTickCount() - start_tick) > pdMS_TO_TICKS(3000)){
+                        break;
+                    }
+                }
+                app.AbortSpeaking(kAbortReasonOfflineWordDetected);    
+            }).detach();
+            continue;
+        }
+#endif
         // VAD state change
         if (vad_state_change_callback_) {
             if (res->vad_state == VAD_SPEECH && !is_speaking_) {

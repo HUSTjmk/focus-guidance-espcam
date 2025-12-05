@@ -602,6 +602,11 @@ choice WAKE_WORD_TYPE
         depends on (IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4) && SPIRAM
         help
             Requires ESP32 S3 and PSRAM
+    config USE_OFFLINE_WORD_DETECTION
+        bool "Offline Keyword Spotting"
+        depends on USE_AFE_WAKE_WORDD
+        help
+            Enable offline keyword spotting, process wake word detection locally without sending data to the server
 
 endchoice
 
