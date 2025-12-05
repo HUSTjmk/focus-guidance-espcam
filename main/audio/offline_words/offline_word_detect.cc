@@ -37,6 +37,7 @@ OfflineWordDetect::~OfflineWordDetect(){
 void OfflineWordDetect::Initialize()
 {    
     srmodel_list_t *models = esp_srmodel_init("model");
+    ESP_LOGI(TAG, "Model info: %s", models->model_name[0]);
     model_ = esp_srmodel_filter(models, ESP_MN_PREFIX, ESP_MN_CHINESE);
 
     if(model_ == NULL){

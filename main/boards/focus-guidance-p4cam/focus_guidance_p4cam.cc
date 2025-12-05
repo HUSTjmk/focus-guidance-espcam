@@ -90,7 +90,7 @@ public:
         InitializeCodecI2c();
         InitializeNoLCD();
         InitializeButtons();
-        //InitializeCamera(); 
+        InitializeCamera(); 
     }
 
     virtual AudioCodec *GetAudioCodec() override {
