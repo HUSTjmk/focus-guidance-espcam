@@ -32,7 +32,8 @@ struct BinaryProtocol3 {
 
 enum AbortReason {
     kAbortReasonNone,
-    kAbortReasonWakeWordDetected
+    kAbortReasonWakeWordDetected,
+    kAbortReasonOfflineWordDetected
 };
 
 enum ListeningMode {

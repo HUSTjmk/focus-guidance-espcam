@@ -602,12 +602,6 @@ choice WAKE_WORD_TYPE
         depends on (IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4) && SPIRAM
         help
             Requires ESP32 S3 and PSRAM
-    config USE_OFFLINE_WORD_DETECTION
-        bool "Offline Keyword Spotting"
-        depends on USE_AFE_WAKE_WORDD
-        help
-            Enable offline keyword spotting, process wake word detection locally without sending data to the server
-
 endchoice
 
 config CUSTOM_WAKE_WORD
@@ -638,6 +632,12 @@ config SEND_WAKE_WORD_DATA
     depends on USE_AFE_WAKE_WORD || USE_CUSTOM_WAKE_WORD
     help
         Send wake word data to the server as the first message of the conversation and wait for response
+config USE_OFFLINE_WORD_DETECT
+    bool "启用离线词检测"
+    default n
+    depends on USE_AFE_WAKE_WORD
+    help
+        Enable offline word detection to filter out false wake word detections when there is no user speech input
 
 config USE_AUDIO_PROCESSOR
     bool "Enable Audio Noise Reduction"

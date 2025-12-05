@@ -1,6 +1,8 @@
 #include "afe_audio_processor.h"
 #include <esp_log.h>
 
+#include "application.h"
+
 #if CONFIG_USE_OFFLINE_WORD_DETECT
 #include "offline_words/offline_word_detect.h"
 #endif
