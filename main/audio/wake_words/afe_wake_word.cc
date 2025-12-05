@@ -126,10 +126,10 @@ size_t AfeWakeWord::GetFeedSize() {
 void AfeWakeWord::AudioDetectionTask() {
     auto fetch_size = afe_iface_->get_fetch_chunksize(afe_data_);
     auto feed_size = afe_iface_->get_feed_chunksize(afe_data_);
-    ESP_LOGI(TAG, "Audio detection task started, feed size: %d fetch size: %d",
+    ESP_LOGI(TAG, "AFE Audio detection task started, feed size: %d fetch size: %d",
         feed_size, fetch_size);
 
-    #if CONFIG_USE_OFFLINE_WORD_DETECT
+#if CONFIG_USE_OFFLINE_WORD_DETECT
     auto& offline_word_detect = OfflineWordDetect::GetInstance();
 #endif
     while (true) {
