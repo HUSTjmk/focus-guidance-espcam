@@ -635,7 +635,7 @@ config SEND_WAKE_WORD_DATA
 config USE_OFFLINE_WORD_DETECT
     bool "启用离线词检测"
     default n
-    depends on USE_AFE_WAKE_WORD
+    depends on USE_CUSTOM_WAKE_WORD
     help
         Enable offline word detection to filter out false wake word detections when there is no user speech input
 

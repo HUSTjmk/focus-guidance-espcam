@@ -17,6 +17,10 @@
 #include "audio_codec.h"
 #include "wake_word.h"
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
 class CustomWakeWord : public WakeWord {
 public:
     CustomWakeWord();
@@ -64,6 +68,9 @@ private:
 
     void StoreWakeWordData(const std::vector<int16_t>& data);
     void ParseWakenetModelConfig();
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+    OfflineWordDetect offline_word_detect_;
+#endif
 };
 
 #endif

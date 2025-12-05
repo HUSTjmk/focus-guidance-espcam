@@ -24,43 +24,63 @@ static const char* TAG = "OfflineWordDetect";
 OfflineWordDetect::OfflineWordDetect()
     : offline_word_pcm_(),
       offline_word_opus_() {        
-    if(!is_initialized_){
-        Initialize();
-        is_initialized_ = true;
-    }
 }
 
 OfflineWordDetect::~OfflineWordDetect(){
 
 }
 
-void OfflineWordDetect::Initialize()
-{    
-    srmodel_list_t *models = esp_srmodel_init("model");
-    ESP_LOGI(TAG, "Model info: %s", models->model_name[0]);
-    model_ = esp_srmodel_filter(models, ESP_MN_PREFIX, ESP_MN_CHINESE);
-
-    if(model_ == NULL){
-        ESP_LOGE(TAG, "No multinet model found");
+void OfflineWordDetect::Initialize(char *model)
+{   
+    model_ = model;
+    if(model_ == nullptr){
+        ESP_LOGE(TAG, "OfflineWordDetect model is nullptr");
         exit(1);
     }
-
-    ESP_LOGI(TAG, "multinet_:%s\n", model_); // 打印命令词模型名称
-    multinet_ = esp_mn_handle_from_name(model_);
-    model_data_ = multinet_->create(model_, 6000);  // 设置唤醒后等待事件 6000代表6000毫秒
-
-    esp_mn_commands_clear(); // 清除当前的命令词列表
+    ESP_LOGI(TAG, "OfflineWordDetect model: %s", model_); // 打印命令词模型名称
     AddCommand("bo fang yin yue", [](){
         ESP_LOGI(TAG, "Command: bo fang yin yue");
     }); // 播放音乐
     AddCommand("zan ting", [](){
         ESP_LOGI(TAG, "Command: zan ting");
     }); // 播放音乐
-    AddCommand("ji xu", [](){
-        ESP_LOGI(TAG, "Command: ji xu");
+    AddCommand("ni hao le xin", [](){
+        ESP_LOGI(TAG, "Command: ni hao le xin");
     }); // 播放音乐
-    multinet_->print_active_speech_commands(model_data_);
-    
+
+    if(!is_initialized_){
+        is_initialized_ = true;
+    }
+    //vTaskDelay(100 / portTICK_PERIOD_MS); // 玄学的延时
+    mutex_.lock();
+    // model_data_ = multinet_->create(model_, 3000);  // 设置唤醒后等待事件 6000代表6000毫秒
+    // esp_mn_commands_update();    
+    // multinet_ = esp_mn_handle_from_name(model_);
+    // multinet_->print_active_speech_commands(model_data_);   
+    mutex_.unlock();
+
+    // srmodel_list_t *models = esp_srmodel_init("model");
+    // ESP_LOGI(TAG, "Model info: %s", models->model_name[0]);
+    // model_ = esp_srmodel_filter(models, ESP_MN_PREFIX, ESP_MN_CHINESE);
+
+    // if(model_ == NULL){
+    //     ESP_LOGE(TAG, "No multinet model found");
+    //     exit(1);
+    // }
+
+    // ESP_LOGI(TAG, "multinet_:%s\n", model_); // 打印命令词模型名称    
+    // model_data_ = multinet_->create(model_, 6000);  // 设置唤醒后等待事件 6000代表6000毫秒
+
+    // esp_mn_commands_clear(); // 清除当前的命令词列表
+    // AddCommand("bo fang yin yue", [](){
+    //     ESP_LOGI(TAG, "Command: bo fang yin yue");
+    // }); // 播放音乐
+    // AddCommand("zan ting", [](){
+    //     ESP_LOGI(TAG, "Command: zan ting");
+    // }); // 播放音乐
+    // AddCommand("ji xu", [](){
+    //     ESP_LOGI(TAG, "Command: ji xu");
+    // }); // 播放音乐
 }
 
 
@@ -83,7 +103,7 @@ esp_err_t OfflineWordDetect::AddCommand(const char* name, std::function<void()> 
         return ESP_FAIL;
     }
     offline_word_commands_.push_back(offline_word_command);    
-    esp_mn_commands_add(1, offline_word_command.name.c_str()); // 添加命令词，不区分id
+    esp_mn_commands_add(2, offline_word_command.name.c_str()); // 添加命令词，不区分id
     esp_mn_commands_update(); // 更新命令词
     ESP_LOGI(TAG, "Add offline command: %s", name);
     return ESP_OK;
@@ -155,4 +175,31 @@ bool OfflineWordDetect::Detect(int16_t *data)
         }
     }
     return false;
+}
+
+bool OfflineWordDetect::HandleResults(esp_mn_results_t *mn_result)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (int i = 0; i < mn_result->num; i++) { // 打印获取到的命令词
+        ESP_LOGI(TAG,"TOP %d, command_id: %d, phrase_id: %d, string:%s prob: %f\n", 
+        i+1, mn_result->command_id[i], mn_result->phrase_id[i], mn_result->string, mn_result->prob[i]);
+        
+        auto it = std::find_if(offline_word_commands_.begin(), offline_word_commands_.end(),
+        [mn_result](const offline_word_command_t& cmd) {
+            return remove_spaces(mn_result->string) == remove_spaces(cmd.name);
+        });
+        
+        if(it != offline_word_commands_.end() && it->callback){
+            ESP_LOGI(TAG, "Execute offline command: %s", it->name.c_str());
+            it->callback();
+            last_detected_offline_word_ = it->name;
+            return true;
+        }
+        }
+    return false;
+}
+
+bool OfflineWordDetect::IsInitialized()
+{
+    return is_initialized_;
 }

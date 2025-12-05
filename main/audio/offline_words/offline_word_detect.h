@@ -42,12 +42,15 @@ public:
     
     esp_err_t AddCommand(const char* name, std::function<void()> callback);
     esp_err_t DelCommand(const char* name);
+    bool HandleResults(esp_mn_results_t *mn_result);
+    bool IsInitialized();
 
     //bool IsInitialized();
     bool Detect(int16_t *data);
 
     bool is_initialized_ = false;
-    void Initialize();
+    void Initialize(char* model);
+    srmodel_list_t *models_ = nullptr;
 private:
     
     char* model_ = NULL;
