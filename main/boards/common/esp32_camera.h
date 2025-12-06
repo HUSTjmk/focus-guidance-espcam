@@ -14,6 +14,10 @@
 #include "jpg/image_to_jpeg.h"
 #include "esp_video_init.h"
 
+#include <fstream>
+#include <mutex>
+#include <condition_variable>
+
 struct JpegChunk {
     uint8_t* data;
     size_t len;
@@ -40,6 +44,7 @@ private:
     std::string explain_url_;
     std::string explain_token_;
     std::thread encoder_thread_;
+    
 
 public:
     Esp32Camera(const esp_video_init_config_t& config);
@@ -50,7 +55,8 @@ public:
     // 翻转控制函数
     virtual bool SetHMirror(bool enabled) override;
     virtual bool SetVFlip(bool enabled) override;
-    virtual std::string Explain(const std::string& question);
+    virtual std::string Explain(const std::string& question);    
+
 };
 
 #endif // ndef CONFIG_IDF_TARGET_ESP32

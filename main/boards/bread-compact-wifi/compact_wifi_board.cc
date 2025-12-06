@@ -183,6 +183,7 @@ public:
     virtual Display* GetDisplay() override {
         return display_;
     }
+
 };
 
 DECLARE_BOARD(CompactWifiBoard);

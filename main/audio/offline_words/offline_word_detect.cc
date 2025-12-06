@@ -1,6 +1,6 @@
 #include "offline_word_detect.h"
 #include "application.h"
-
+#include "board.h"
 #include <esp_log.h>
 #include <model_path.h>
 #include <arpa/inet.h>
@@ -44,13 +44,26 @@ void OfflineWordDetect::Initialize(char *model)
     AddCommand("zan ting", [](){
         ESP_LOGI(TAG, "Command: zan ting");
     }); // 播放音乐
-    AddCommand("ni hao le xin", [](){
-        ESP_LOGI(TAG, "Command: ni hao le xin");
-    }); // 播放音乐
 
     if(!is_initialized_){
         is_initialized_ = true;
     }
+    AddCommand("pai zhao", [this](){               
+    std::thread ([this](){
+        ESP_LOGI(TAG, "Command: pai zhao");
+        TickType_t startTick = xTaskGetTickCount();
+        auto camera = Board::GetInstance().GetCamera();
+        if(camera == nullptr){
+            ESP_LOGE(TAG, "Camera is nullptr");
+            return;
+        }
+        camera->Capture();        
+        // std::string result = camera->Explain("Take a photo");
+        // ESP_LOGI(TAG, "Explain result: %s", result.c_str());            
+        // TickType_t endTick = xTaskGetTickCount();
+        // ESP_LOGI(TAG, "Photo taken and explained in %d ms", (endTick - startTick) * portTICK_PERIOD_MS);
+    }).detach();
+    }); // 拍照  
     //vTaskDelay(100 / portTICK_PERIOD_MS); // 玄学的延时
     mutex_.lock();
     // model_data_ = multinet_->create(model_, 3000);  // 设置唤醒后等待事件 6000代表6000毫秒
@@ -87,6 +100,7 @@ void OfflineWordDetect::Initialize(char *model)
 #define OFFLINE_WORD_NUM_MAX 20
 esp_err_t OfflineWordDetect::AddCommand(const char* name, std::function<void()> callback)
 {
+    static int num = 2;
     offline_word_command_t offline_word_command = {.name=name, .callback=callback};//esp_mn的id从1开始
     if(strlen(name) > 255){
         ESP_LOGW(TAG, "The length of offline command name should not exceed 255");
@@ -103,7 +117,7 @@ esp_err_t OfflineWordDetect::AddCommand(const char* name, std::function<void()> 
         return ESP_FAIL;
     }
     offline_word_commands_.push_back(offline_word_command);    
-    esp_mn_commands_add(2, offline_word_command.name.c_str()); // 添加命令词，不区分id
+    esp_mn_commands_add(num++, offline_word_command.name.c_str()); // 添加命令词，不区分id
     esp_mn_commands_update(); // 更新命令词
     ESP_LOGI(TAG, "Add offline command: %s", name);
     return ESP_OK;

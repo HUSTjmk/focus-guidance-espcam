@@ -13,6 +13,7 @@
 #include "linux/videodev2.h"
 #include "lvgl_display.h"
 #include "mcp_server.h"
+#include "esp_jpeg_common.h"
 #include "system_info.h"
 
 #ifdef CONFIG_XIAOZHI_ENABLE_CAMERA_DEBUG_MODE
@@ -374,11 +375,16 @@ Esp32Camera::~Esp32Camera() {
 }
 
 void Esp32Camera::SetExplainUrl(const std::string& url, const std::string& token) {
-    explain_url_ = url;
-    explain_token_ = token;
+    // explain_url_ = url;
+    // explain_token_ = token;
+    explain_url_ = "http://192.168.34.201:8000/upload/";
+    explain_token_ = "test-token";
+    ESP_LOGI(TAG, "Set explain URL: %s", explain_url_.c_str());
+    ESP_LOGI(TAG, "Set explain token: %s", explain_token_.c_str());
 }
 
 bool Esp32Camera::Capture() {
+    TickType_t startTick = xTaskGetTickCount();
     if (encoder_thread_.joinable()) {
         encoder_thread_.join();
     }
@@ -423,6 +429,7 @@ bool Esp32Camera::Capture() {
                                    ESP_LOG_DEBUG);
 
             switch (sensor_format_) {
+                ESP_LOGD(TAG, "sensor_format_ = 0x%08x", sensor_format_);
                 case V4L2_PIX_FMT_RGB565:
                 case V4L2_PIX_FMT_RGB24:
                 case V4L2_PIX_FMT_YUYV:
@@ -718,8 +725,9 @@ bool Esp32Camera::Capture() {
             ESP_LOGE(TAG, "VIDIOC_QBUF failed");
         }
     }
-
-    // 显示预览图片
+    TickType_t endTick = xTaskGetTickCount();
+        ESP_LOGI(TAG, "Photo capture in %d ms", (endTick - startTick) * portTICK_PERIOD_MS);
+    //显示预览图片
     auto display = dynamic_cast<LvglDisplay*>(Board::GetInstance().GetDisplay());
     if (display != nullptr) {
         if (!frame_.data) {
