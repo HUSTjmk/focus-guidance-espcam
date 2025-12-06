@@ -1,4 +1,4 @@
-#include "wifi_board.h"
+#include "ml307_board.h"
 #include "codecs/es8311_audio_codec.h"
 #include "application.h"
 #include "display/lcd_display.h"
@@ -79,7 +79,7 @@ static const gc9a01_lcd_init_cmd_t gc9107_lcd_init_cmds[] = {
 // LV_FONT_DECLARE(font_puhui_20_4);
 // LV_FONT_DECLARE(font_awesome_20_4);
 
-class FocusGuidanceP4Cam : public WifiBoard {
+class FocusGuidanceP4Cam : public Ml307Board {
 private:
     i2c_master_bus_handle_t i2c_bus_;
     Button boot_button_;
@@ -166,7 +166,7 @@ private:
         boot_button_.OnClick([this]() {
             auto& app = Application::GetInstance();
             if (app.GetDeviceState() == kDeviceStateStarting && !WifiStation::GetInstance().IsConnected()) {
-                ResetWifiConfiguration();
+                //ResetWifiConfiguration();
             }
             app.ToggleChatState(); });
     }
@@ -213,7 +213,7 @@ private:
     }
 
 public:
-    FocusGuidanceP4Cam() :
+    FocusGuidanceP4Cam() : Ml307Board(Module_4G_TX_PIN, Module_4G_RX_PIN),
         boot_button_(BOOT_BUTTON_GPIO){
         InitializeSpi();
         InitializeCodecI2c();

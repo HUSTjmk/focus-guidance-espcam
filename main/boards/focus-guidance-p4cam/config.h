@@ -26,6 +26,8 @@
 #define DISPLAY_RST_PIN       GPIO_NUM_23
 #define DISPLAY_CS_PIN        GPIO_NUM_21
 
+#define Module_4G_TX_PIN GPIO_NUM_37
+#define Module_4G_RX_PIN GPIO_NUM_38
 
 #ifdef CONFIG_LCD_ST7789_240X320
 #define LCD_TYPE_ST7789_SERIAL
