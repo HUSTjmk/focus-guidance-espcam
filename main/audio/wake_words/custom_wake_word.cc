@@ -10,6 +10,10 @@
 #include <cJSON.h>
 
 
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+#include "offline_words/offline_word_detect.h"
+#endif
+
 #define TAG "CustomWakeWord"
 
 
@@ -127,6 +131,13 @@ bool CustomWakeWord::Initialize(AudioCodec* codec, srmodel_list_t* models_list) 
     esp_mn_commands_update();
     
     multinet_->print_active_speech_commands(multinet_model_data_);
+
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+    auto& offline_word_detect = OfflineWordDetect::GetInstance();
+    if(!offline_word_detect.IsInitialized()){
+        offline_word_detect.Initialize(mn_name_);
+    }    
+#endif    
     return true;
 }
 
@@ -165,7 +176,19 @@ void CustomWakeWord::Feed(const std::vector<int16_t>& data) {
     if (mn_state == ESP_MN_STATE_DETECTING) {
         return;
     } else if (mn_state == ESP_MN_STATE_DETECTED) {
-        esp_mn_results_t *mn_result = multinet_->get_results(multinet_model_data_);
+        esp_mn_results_t *mn_result = multinet_->get_results(multinet_model_data_);  
+#if CONFIG_USE_OFFLINE_WORD_DETECT
+        auto& offline_word_detect = OfflineWordDetect::GetInstance();
+        if(offline_word_detect.IsInitialized()){
+            if(offline_word_detect.HandleResults(mn_result)==true){
+                // offline word detect handled the results, return directly
+                multinet_->clean(multinet_model_data_);
+                return;
+            }
+        }else{
+            ESP_LOGW(TAG, "Offline word detect is not initialized");
+        }
+#endif
         for (int i = 0; i < mn_result->num && running_; i++) {
             ESP_LOGI(TAG, "Custom wake word detected: command_id=%d, string=%s, prob=%f", 
                     mn_result->command_id[i], mn_result->string, mn_result->prob[i]);

@@ -384,6 +384,7 @@ void Esp32Camera::SetExplainUrl(const std::string& url, const std::string& token
 }
 
 bool Esp32Camera::Capture() {
+    TickType_t startTick = xTaskGetTickCount();
     if (encoder_thread_.joinable()) {
         encoder_thread_.join();
     }
@@ -726,6 +727,8 @@ bool Esp32Camera::Capture() {
             ESP_LOGE(TAG, "VIDIOC_QBUF failed");
         }
     }
+    TickType_t endTick = xTaskGetTickCount();
+    ESP_LOGI(TAG, "Photo capture in %d ms", (endTick - startTick) * portTICK_PERIOD_MS);
 
     // 显示预览图片
     auto display = dynamic_cast<LvglDisplay*>(Board::GetInstance().GetDisplay());
